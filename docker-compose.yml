@@ -1,0 +1,43 @@
+version: '3.8'
+services:
+  mongodb:
+    image: mongo:6
+    container_name: zenn_db
+    restart: always
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - zenn_net
+
+  backend:
+    build: .
+    container_name: zenn_api
+    restart: always
+    depends_on:
+      - mongodb
+    environment:
+      - PORT=5000
+      - MONGO_URI=mongodb://mongodb:27017/zenn_store
+    networks:
+      - zenn_net
+
+  nginx:
+    image: nginx:alpine
+    container_name: zenn_web
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - backend
+    networks:
+      - zenn_net
+
+networks:
+  zenn_net:
+    driver: bridge
+
+volumes:
+  mongo_data:
